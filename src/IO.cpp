@@ -163,8 +163,7 @@ void IO::saveas(){
 
 void IO::close(){
 
-    if(IO::saved) return;
-    if(IO::changes){
+    if(IO::changes && !IO::saved){
 
         String input;
 
@@ -406,26 +405,9 @@ void IO::pers(){
 
 void IO::loadColorNames(){
 
-    ifstream ifs("../utils/colors.txt");
-    String name;
-    while(ifs >> name) IO::colorNames.pushBack(name);
+    ifstream ifs("utils/colors.txt");
+    String color;
+    while(ifs >> color) IO::colorNames.pushBack(color);
     ifs.close();
 
 }
-
-/*
-
-open test.svg
-print
-create rectangle 1000 1000 10 20 yellow
-print
-within circle 0 0 5
-erase 2
-erase 100
-print
-translate vertical=10 horizontal=100
-print
-save
-exit
-
-*/

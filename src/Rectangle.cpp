@@ -73,8 +73,7 @@ void Rectangle::deserialize(istream &is){
 	this -> setColor(color);
 
 }
-#include <iostream>
-using std::cout;
+
 String Rectangle::toString() const{
 
 	point rectPoint = getPointAtIndex(0);

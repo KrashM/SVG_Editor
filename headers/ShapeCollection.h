@@ -20,6 +20,7 @@ class ShapeCollection{
 		void translateShapes(const double, const double);
 		void translateShapeByIndex(const size_t, const double, const double);
 		void removeShape(size_t);
+		void clear();
 
 		double getPerOfFigureByIndex(const size_t) const;
 		double getAreaOfFigureByIndex(const size_t) const;

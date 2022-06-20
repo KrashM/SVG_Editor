@@ -7,9 +7,12 @@
 
 ShapeCollection IO::collection;
 String IO::currentFile;
+bool IO::saved, IO::closed = true, IO::changes;
+Vector<String> IO::colorNames;
 
 void IO::menu(){
 
+    IO::loadColorNames();
     String command;
 
     while(true){
@@ -17,47 +20,39 @@ void IO::menu(){
         cout << "> ";
         cin >> command;
 
-        if(command == "exit") break;
-        else if(command == "open") readFromFile();
-        else if(command == "close");
-        else if(command == "save") writeToFile();
-        else if(command == "saveas");
-        else if(command == "help");
+        if(command == "exit"){
+            
+            if(closed) break;
+            cout << "You haven't closed " << IO::currentFile << '\n';
+
+        }
+
+        else if(command == "help") help();
+
+        else if(command == "open") open();
+        else if(command == "save") save();
+        else if(command == "saveas") saveas();
+        else if(command == "close") close();
 
         else if(command == "print") print();
-        
         else if(command == "create") create();
         else if(command == "erase") erase();
-        
         else if(command == "translate") translate();
         else if(command == "within") within();
         else if(command == "pointin") pointIn();
         else if(command == "areas") areas();
         else if(command == "pers") pers();
 
+        else cout << "Command " << command << " is not supported!\n";
+
     }
 
 }
 
-void IO::writeToFile(){
-
-    ofstream ofs(IO::currentFile.c_str(), ios::trunc);
-
-    ofs << "<?xml version=\"1.0\" standalone=\"no\"?>\n"
-        << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
-        << "<svg>\n";
-    for(size_t i = 0; i < IO::collection.size(); i++)
-        IO::collection[i] -> serialize(ofs);
-    ofs << "</svg>";
-
-    ofs.close();
-    cout << "Successfully saved the changes to " << IO::currentFile << '\n';
-
-}
-
-void IO::readFromFile(){
+void IO::open(){
 
     cin >> IO::currentFile;
+    IO::currentFile = "images/" + IO::currentFile;
 
     String fileNameExtension = IO::currentFile.substring(IO::currentFile.length() - 4, strlen(SVGEXTENSION));
 
@@ -110,8 +105,110 @@ void IO::readFromFile(){
         
     }
 
+    IO::saved = false;
+    IO::closed = false;
+    IO::changes = false;
     ifs.close();
     cout << "Successfully opened " << IO::currentFile << '\n';
+
+}
+
+void IO::save(){
+
+    ofstream ofs(IO::currentFile.c_str(), ios::trunc);
+
+    ofs << "<?xml version=\"1.0\" standalone=\"no\"?>\n"
+        << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
+        << "<svg>\n";
+    for(size_t i = 0; i < IO::collection.size(); i++)
+        IO::collection[i] -> serialize(ofs);
+    ofs << "</svg>";
+
+    IO::saved = true;
+    IO::changes = false;
+    ofs.close();
+    cout << "Successfully saved the changes to " << IO::currentFile << '\n';
+
+}
+
+void IO::saveas(){
+
+    cin >> IO::currentFile;
+    IO::currentFile = "images/" + IO::currentFile;
+    
+    String fileNameExtension = IO::currentFile.substring(IO::currentFile.length() - 4, strlen(SVGEXTENSION));
+
+    if(fileNameExtension != SVGEXTENSION){
+
+        cout << "File is not an svg file\n";
+        return;
+
+    }
+
+    ofstream ofs(IO::currentFile.c_str(), ios::trunc);
+
+    ofs << "<?xml version=\"1.0\" standalone=\"no\"?>\n"
+        << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\"\"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n"
+        << "<svg>\n";
+    for(size_t i = 0; i < IO::collection.size(); i++)
+        IO::collection[i] -> serialize(ofs);
+    ofs << "</svg>";
+
+    IO::saved = true;
+    IO::changes = false;
+    ofs.close();
+    cout << "Successfully saved the changes to " << IO::currentFile << '\n';
+
+}
+
+void IO::close(){
+
+    if(IO::saved) return;
+    if(IO::changes){
+
+        String input;
+
+        cout << "File has not been saved!\nsave/saveas/cancel?\n>";
+        cin >> input;
+
+        if(input == "save") save();
+        else if(input == "saveas");
+
+    }
+
+    IO::currentFile = "";
+    IO::collection.clear();
+    IO::closed = true;
+
+}
+
+void IO::help(){
+
+    cout << "Supported shapes are:\n"
+        << "Circle - centerx centery radius color\n"
+        << "Rectangle - x y width height color(x and y are in the top left corner)\n"
+        << "Line - x1 y1 x2 y2 color\n\n"
+
+        << "Supported commands are:\n"
+        << "File commands:\n"
+        << "open <file name>.svg - Opens svg file in the editor.\n"
+        << "save - Saves the currently opened file.\n"
+        << "saveas <file name>.svg - Saves the currently opened file as new file.\n"
+        << "close - Closes the currently opened file if it has been saved.\n\n"
+
+        << "Editor commands are:\n"
+        << "print - Prints out the file information about all the figures.\n"
+        << "create <shape> [<params of shape>] - Creates new shape with the specified parameters.\n"
+        << "erase <index> - Erases figure on the specified index(1-n).\n"
+        << "translate [<figure index>] <x translation> <y translation> - If figure index is not specified it translates all the shapes, otherwise only the specified.\n"
+        << "within <shape> [<params of shape>] - Prints every shape that is fully inside the specified shape.\n"
+        << "pointin <x> <y> - Prints every shape that the specified point lies in.\n"
+        << "areas - Prints every shapes area.\n"
+        << "pers - Prints every shapes perimeter.\n\n"
+
+        << "Util commands are:\n"
+        << "help - Prints out this menu.\n"
+        << "exit - Exits the program and saves opened files if not saved.\n";
 
 }
 
@@ -131,7 +228,16 @@ void IO::create(){
 
         size_t x, y, width, height;
         String color;
+
         cin >> x >> y >> width >> height >> color;
+
+        if(!IO::colorNames.contains(color)){
+
+            cout << "Invalid color name\n";
+            return;
+
+        }
+
         IO::collection.addShape(new Rectangle(x, y, width, height, color));
 
     }
@@ -139,7 +245,16 @@ void IO::create(){
         
         size_t x, y, radius;
         String color;
+
         cin >> x >> y >> radius >> color;
+
+        if(!IO::colorNames.contains(color)){
+
+            cout << "Invalid color name\n";
+            return;
+
+        }
+
         IO::collection.addShape(new Circle(x, y, radius, color));
 
     }
@@ -147,12 +262,22 @@ void IO::create(){
        
         size_t x1, y1, x2, y2;
         String color;
+
         cin >> x1 >> y1 >> x2 >> y2 >> color;
+
+        if(!IO::colorNames.contains(color)){
+
+            cout << "Invalid color name\n";
+            return;
+
+        }
+
         IO::collection.addShape(new Line(x1, y1, x2, y2, color));
 
     }
 
     cout << "Successfully created " << shape << " (" << IO::collection.size() << ")\n";
+    IO::changes = true;
     
 }
 
@@ -173,7 +298,8 @@ void IO::erase(){
 
     collection.removeShape(index);
     cout << "Erased a circle (" << index + 1 << ")\n";
-  
+    IO::changes = true;
+
 }
 
 void IO::translate(){
@@ -216,6 +342,8 @@ void IO::translate(){
         cout << "Translated figure at index: " << input << '\n';
 
     }
+
+    IO::changes = true;
 
 }
 
@@ -273,6 +401,15 @@ void IO::pers(){
     
     for(size_t i = 0; i < IO::collection.size(); i++)
         cout << i + 1 << ". " << "Shape per: " << IO::collection[i] -> getPer() <<  '\n';
+
+}
+
+void IO::loadColorNames(){
+
+    ifstream ifs("../utils/colors.txt");
+    String name;
+    while(ifs >> name) IO::colorNames.pushBack(name);
+    ifs.close();
 
 }
 

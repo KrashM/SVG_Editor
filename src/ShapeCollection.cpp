@@ -1,4 +1,4 @@
-#include "ShapeCollection.h"
+#include "../headers/ShapeCollection.h"
 #include <stdexcept>
 
 ShapeCollection::ShapeCollection(){}
@@ -21,6 +21,15 @@ ShapeCollection& ShapeCollection::operator=(const ShapeCollection& other){
 void ShapeCollection::addShape(const Shape * const shape){ this -> shapes.pushBack(shape -> clone()); }
 
 void ShapeCollection::removeShape(size_t index){ delete this -> shapes.removeAt(index); }
+
+void ShapeCollection::clear(){
+
+	size_t numOfElements = this -> shapes.size();
+
+	for(int i = 0; i < numOfElements; i++)
+		delete this -> shapes.popBack();
+
+}
 
 void ShapeCollection::translateShapes(const double x, const double y){
 

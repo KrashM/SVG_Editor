@@ -40,7 +40,7 @@ void Line::serialize(ostream &os) const{
 
 	point p1 = getPointAtIndex(0);
 	point p2 = getPointAtIndex(1);
-	os << "\t<g stroke=\"" << getColor() << "\">\n\t\t<line x1=\"" << p1.x << "\" y1=\"" << p1.y << "\" x2=\"" << p2.x << "\" y2=\"" << p2.y << "\" stroke-width=\"5\" />\n\t</g>\n";
+	os << "\t<line x1=\"" << p1.x << "\" y1=\"" << p1.y << "\" x2=\"" << p2.x << "\" y2=\"" << p2.y << "\" stroke=\"" << this -> getColor() << "\" stroke-width=\"5\" />\n";
 
 }
 
@@ -48,14 +48,7 @@ void Line::deserialize(istream &is){
 
 	size_t x1, y1, x2, y2;
 	String color;
-
-	while(is.get() != '\"');
-	
-	size_t i;
-	char *inp = new char[2];
-	inp[1] = '\0';
-	
-	for(i = 0; (inp[0] = is.get()) != '\"'; i++) color += inp;
+	char character;
 
 	while(is.get() != '\"');
 	is >> x1;
@@ -73,6 +66,9 @@ void Line::deserialize(istream &is){
 	while(is.get() != '\"');
 	is >> y2;
 	is.ignore();
+
+	while(is.get() != '\"');
+	while((character = is.get()) != '\"') color += character;
 
 	this -> setPoint(0, point(x1, y1));
 	this -> setPoint(1, point(x2, y2));
